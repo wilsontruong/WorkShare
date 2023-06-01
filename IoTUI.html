@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+    <head>
+    <script src="https://cdn.socket.io/socket.io-3.0.5.min.js"></script>
+    <script type="text/javascript">
+        const socket = io('http://"ENTER_IP":3000'); //Replace the quotes in here with the IP address and the port the server is using.
+        let beepDistance = 10;
+
+        //Gets the value of the live distance from the sensor.
+        socket.on('deviceUpdate', function(data) {
+            const dist = document.querySelector('#messages');
+            dist.innerText = data + "cm";
+            const stat = document.querySelector('#status');
+            if (data <= beepDistance) {
+                stat.innerText = "The sensor is at a dangerous distance of: -" + (beepDistance-data).toFixed(2) + "cm below the safe distance.";
+                stat.style.color = "red";
+            } else if (data > beepDistance) {
+                stat.innerText = "The sensor is at a safe distance of: +" + (data-beepDistance).toFixed(2) + "cm above the safe disatnce." ;
+                stat.style.color = "green";
+            }
+        });
+
+        socket.on('error', console.error.bind(console));
+        socket.on('message', console.log.bind(console));
+
+        //Display the new beep distance value on screen.
+        socket.on('distanceUpdate', function(data) {
+            const num = document.querySelector('#beepDistance');
+            num.innerText = data + "cm";
+            beepDistance = data;
+        });
+
+        //Updates the beep distance if called.
+        function updateDistance(message) {
+            socket.emit('updateDistance',document.getElementById('distanceform').value)
+        }
+    </script>
+    </head>
+    <body>
+        <input type="number" title="distance" id="distanceform"/> <button onclick="updateDistance()">Update Distance</button>
+        <h2> Sensor Messages: </h2>
+        <p id="messages"> Distance: Not Currently Scanning </p>
+        <p id="status"> Status: Not Currently Scanning</p>
+        
+        <br/>
+
+        <h2> Beep Distance: </h2>
+        <p id="beepDistance"> 10cm (Default) </p>
+        <p id=""> </p>
+    </body>
+</html>
